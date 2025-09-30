@@ -38,6 +38,9 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 
 /**
@@ -50,10 +53,22 @@ public class MysqlManager implements UserDatabase {
   private final PluginMain plugin;
   private final MysqlDatabase database;
   private final String createTableStatement;
+  private final ScheduledThreadPoolExecutor databaseExecutor;
 
   public MysqlManager(PluginMain plugin) {
     this.plugin = plugin;
     this.createTableStatement = "CREATE TABLE IF NOT EXISTS `" + getTableName() + "` (`UUID` char(36) NOT NULL PRIMARY KEY, `name` varchar(32) NOT NULL);";
+
+    AtomicInteger counter = new AtomicInteger(0);
+    this.databaseExecutor = new ScheduledThreadPoolExecutor(4, t -> {
+        Thread thread = new Thread(t);
+        thread.setName(plugin.getName() + " - Database Handling Thread - " + counter.getAndIncrement());
+        thread.setPriority(Thread.NORM_PRIORITY - 3);
+        thread.setDaemon(false);
+        return thread;
+    });
+    this.databaseExecutor.setMaximumPoolSize(4);
+
     FileConfiguration config = ConfigUtils.getConfig(plugin, "mysql");
     database = new MysqlDatabase(config.getString("user"), config.getString("password"), config.getString("address"), config.getLong("maxLifeTime", 1800000));
     plugin.getDebugger().debug("MySQL Database enabled");
@@ -61,7 +76,7 @@ public class MysqlManager implements UserDatabase {
   }
 
   private void initializeTable(PluginMain plugin) {
-    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+    this.databaseExecutor.execute(() -> {
       try(Connection connection = database.getConnection();
           Statement statement = connection.createStatement()) {
 
@@ -91,7 +106,7 @@ public class MysqlManager implements UserDatabase {
 
   @Override
   public void addColumn(String columnName, String columnProperties) {
-    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+    this.databaseExecutor.execute(() -> {
       try(Connection connection = database.getConnection(); Statement statement = connection.createStatement()) {
         updateTable(statement, "ALTER TABLE " + getTableName() + " ADD COLUMN " + columnName + " " + columnProperties + ";");
         plugin.getDebugger().debug("MySQL Table | Added column {0} {1}", columnName, columnProperties);
@@ -103,7 +118,7 @@ public class MysqlManager implements UserDatabase {
 
   @Override
   public void dropColumn(String columnName) {
-    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+    this.databaseExecutor.execute(() -> {
           database.executeUpdate("ALTER TABLE " + getTableName() + " DROP COLUMN " + columnName + ";");
           plugin.getDebugger().debug("MySQL Table | Dropped column {0}", columnName);
         }
@@ -117,7 +132,7 @@ public class MysqlManager implements UserDatabase {
 
   @Override
   public void saveStatistic(IUser user, IStatisticType statisticType) {
-    Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+      this.databaseExecutor.execute(() -> {
       database.executeUpdate("UPDATE " + getTableName() + " SET " + statisticType.getName() + "=" + user.getStatistic(statisticType) + " WHERE UUID='" + user.getUniqueId().toString() + "';");
       plugin.getDebugger().debug("MySQL Table | Saved {0} statistic to {1} for {2}", statisticType.getName(), user.getStatistic(statisticType), user.getPlayer().getName());
     });
@@ -129,7 +144,7 @@ public class MysqlManager implements UserDatabase {
       plugin.getDebugger().debug("User been saving while is not is not initialized.");
     } else {
       try {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> database.executeUpdate(getUpdateQuery(user)));
+        this.databaseExecutor.execute(() -> database.executeUpdate(getUpdateQuery(user)));
       } catch (IllegalPluginAccessException ignored) {
         database.executeUpdate(getUpdateQuery(user));
       }
@@ -138,7 +153,7 @@ public class MysqlManager implements UserDatabase {
 
   @Override
   public void loadStatistics(IUser user) {
-    Bukkit.getScheduler().runTaskLaterAsynchronously(plugin, () -> {
+    this.databaseExecutor.schedule(() -> {
       String uuid = user.getUniqueId().toString();
       try(Connection connection = database.getConnection(); Statement statement = connection.createStatement()) {
         String playerName = user.getPlayer() == null ? Bukkit.getOfflinePlayer(uuid).getName() : user.getPlayer().getName();
@@ -154,7 +169,7 @@ public class MysqlManager implements UserDatabase {
       } catch(SQLException exception) {
         throwException(exception);
       }
-    }, 20L /* required to load stats that are saved on server switch */);
+    }, 1, TimeUnit.SECONDS /* required to load stats that are saved on server switch */);
   }
 
   /**
@@ -270,6 +285,7 @@ public class MysqlManager implements UserDatabase {
       database.executeUpdate(getUpdateQuery(plugin.getUserManager().getUser(player)));
     }
     database.shutdownConnPool();
+    this.databaseExecutor.shutdown();
   }
 
   @Override

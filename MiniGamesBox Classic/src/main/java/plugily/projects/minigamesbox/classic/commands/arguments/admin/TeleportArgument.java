@@ -84,7 +84,7 @@ public class TeleportArgument {
       player.sendMessage(ChatColor.RED + gameLocation.toString() + " location isn't set for this arena!");
       return;
     }
-    VersionUtils.teleport(player, location);
+    player.teleportAsync(location);
     player.sendMessage(ChatColor.GRAY + "Teleported to " + gameLocation.toString() + " location from arena " + arena.getId());
   }
 }

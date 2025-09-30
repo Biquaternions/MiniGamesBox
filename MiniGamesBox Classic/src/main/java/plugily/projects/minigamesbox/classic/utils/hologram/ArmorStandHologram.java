@@ -201,7 +201,7 @@ public class ArmorStandHologram {
       if(ServerVersion.Version.isCurrentHigher(ServerVersion.Version.v1_8_8)) {
         entityItem.setInvulnerable(true);
       }
-      VersionUtils.teleport(entityItem, location);
+      entityItem.teleportAsync(location);
     }
   }
 

@@ -33,6 +33,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -44,7 +45,7 @@ public class ActionBarManager extends BukkitRunnable {
 
   private final PluginMain plugin;
   private final int period = 10;
-  private Map<Player, List<ActionBar>> actionBars = new HashMap<>();
+  private Map<Player, List<ActionBar>> actionBars = new ConcurrentHashMap<>();
   private Map<ActionBar, Integer> actionBarTimers = new HashMap<>();
   private Map<String, Integer> flashing = new HashMap<>();
 
@@ -134,8 +135,9 @@ public class ActionBarManager extends BukkitRunnable {
 
   public void addActionBar(Player player, ActionBar actionBar) {
     plugin.getDebugger().debug("[ActionBarManager] Player {0} added {1}", player.getName(), actionBar.getMessage().getRaw());
-    if(actionBars.containsKey(player)) {
-      List<ActionBar> bars = new ArrayList<>(actionBars.get(player));
+    List<ActionBar> stored = actionBars.get(player);
+    if(stored != null) {
+      List<ActionBar> bars = new ArrayList<>(stored);
       actionBars.remove(player);
       if(bars.stream().anyMatch(bar -> bar.getActionBarType() == ActionBar.ActionBarType.SHOW_PERMANENT) && bars.stream().anyMatch(bar -> bar.getPriority() >= actionBar.getPriority())) {
         List<ActionBar> displayBars = bars.stream().filter(bar -> bar.getActionBarType() == ActionBar.ActionBarType.SHOW_PERMANENT).filter(bar -> bar.getPriority() <= actionBar.getPriority()).collect(Collectors.toList());

@@ -48,7 +48,7 @@ public class JoinEvent implements Listener {
   public void onJoin(PlayerJoinEvent event) {
     IPluginArena arena = plugin.getUserManager().getUsersQuitDuringGame().get(event.getPlayer().getUniqueId());
     if(arena != null) {
-      VersionUtils.teleport(event.getPlayer(), arena.getEndLocation());
+      event.getPlayer().teleportAsync(arena.getEndLocation());
       plugin.getUserManager().getUsersQuitDuringGame().remove(event.getPlayer().getUniqueId());
     }
     plugin.getUserManager().loadStatistics(plugin.getUserManager().getUser(event.getPlayer()));

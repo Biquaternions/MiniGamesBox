@@ -49,7 +49,7 @@ public class BungeeEvents implements Listener {
     }
 
     if(!plugin.getArenaRegistry().getArenas().isEmpty()) {
-      VersionUtils.teleport(e.getPlayer(), plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena()).getLobbyLocation());
+      e.getPlayer().teleportAsync(plugin.getArenaRegistry().getArenas().get(plugin.getArenaRegistry().getBungeeArena()).getLobbyLocation());
     }
   }
 

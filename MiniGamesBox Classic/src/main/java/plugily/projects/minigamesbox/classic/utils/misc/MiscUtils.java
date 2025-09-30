@@ -180,7 +180,7 @@ public class MiscUtils {
       Bukkit.getConsoleSender().sendMessage("[" + pluginname + "][SOFTWARE] §cYou are using some fork that was not tested by us. The plugin may work on it, too. (no guarantee)");
       Bukkit.getConsoleSender().sendMessage("[" + pluginname + "][SOFTWARE] §cIf you have any bugs, please try to replicate the issue on paper software first!");
     }
-    String version = plugin.getDescription().getVersion();
+    String version = plugin.getPluginMeta().getVersion();
     if(version.contains("-debug") || plugin.getConfig().getBoolean("Debug")) {
       Bukkit.getConsoleSender().sendMessage("[" + pluginname + "] ");
       Bukkit.getConsoleSender().sendMessage("[" + pluginname + "][DEBUG] §eThe debug mode of this plugin is enabled");

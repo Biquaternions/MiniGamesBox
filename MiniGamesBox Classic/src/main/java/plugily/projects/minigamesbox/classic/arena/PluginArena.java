@@ -369,7 +369,7 @@ public class PluginArena extends BukkitRunnable implements IPluginArena {
       plugin.getBungeeManager().connectToHub(player);
       plugin.getDebugger().debug("{0} has left the arena {1}! Teleported to the Hub server.", player.getName(), getId());
     }
-    VersionUtils.teleport(player, getEndLocation());
+    player.teleportAsync(this.getEndLocation());
   }
 
   @Override

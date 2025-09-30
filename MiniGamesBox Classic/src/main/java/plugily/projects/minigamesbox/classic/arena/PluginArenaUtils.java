@@ -77,7 +77,7 @@ public class PluginArenaUtils {
 
   public static CompletableFuture<Void> preparePlayerForGame(
       IPluginArena arena, Player player, Location location, boolean spectator) {
-    return VersionUtils.teleport(player, location).thenAccept(bo -> {
+    return player.teleportAsync(location).thenAccept(bo -> {
       IUser user = plugin.getUserManager().getUser(player);
       if (plugin.getConfigPreferences().getOption("INVENTORY_MANAGER")) {
         InventorySerializer.saveInventoryToFile(plugin, player);

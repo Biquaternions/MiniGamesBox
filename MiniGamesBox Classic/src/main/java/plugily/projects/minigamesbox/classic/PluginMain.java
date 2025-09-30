@@ -404,6 +404,7 @@ public class PluginMain extends JavaPlugin implements IPluginMain {
       }
       getHologramManager().getArmorStands().clear();
     }
+    this.spectatorItemsManager.shutdown();
     getDebugger().debug(getPluginMessagePrefix() + "System disable finished took {0}ms", System.currentTimeMillis() - start);
   }
 

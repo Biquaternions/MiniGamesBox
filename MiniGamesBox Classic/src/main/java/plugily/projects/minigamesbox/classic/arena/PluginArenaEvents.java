@@ -91,7 +91,7 @@ public class PluginArenaEvents implements Listener {
       case VOID:
         if(arena.getArenaState() != IArenaState.IN_GAME) {
           victim.damage(0);
-          VersionUtils.teleport(victim, arena.getLobbyLocation());
+          victim.teleportAsync(arena.getLobbyLocation());
         } else {
           handleIngameVoidDeath(victim, arena);
         }
@@ -123,6 +123,6 @@ public class PluginArenaEvents implements Listener {
 
   public void handleIngameVoidDeath(Player victim, IPluginArena arena) {
     victim.damage(1000.0);
-    VersionUtils.teleport(victim, arena.getStartLocation());
+    victim.teleportAsync(arena.getStartLocation());
   }
 }

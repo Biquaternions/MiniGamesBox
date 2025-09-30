@@ -103,7 +103,7 @@ public class PluginStartingState implements ArenaStateHandler {
       arena.getBossbarManager().setProgress(1.0);
       org.bukkit.Location arenaLoc = arena.getStartLocation();
       for(Player player : arena.getPlayers()) {
-        VersionUtils.teleport(player, arenaLoc).thenAccept(bol -> {
+        player.teleportAsync(arenaLoc).thenAccept(bol -> {
         PluginArenaUtils.hidePlayersOutsideTheGame(player, arena);
         player.setExp(0);
         player.setLevel(0);

@@ -178,7 +178,7 @@ public class LocationItem implements CategoryItemHandler {
     if(getRawLocation() != null) {
       Location location = LocationSerializer.getLocation(getRawLocation());
       if(location != null) {
-        VersionUtils.teleport(player, location);
+        player.teleportAsync(location);
         new MessageBuilder("&aTeleported to " + name.toUpperCase() + " Location of arena " + setupInventory.getArenaKey()).prefix().send(player);
         return;
       }

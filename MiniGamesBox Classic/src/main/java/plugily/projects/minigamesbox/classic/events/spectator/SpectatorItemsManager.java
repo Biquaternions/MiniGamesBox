@@ -28,11 +28,15 @@ import plugily.projects.minigamesbox.classic.PluginMain;
 import plugily.projects.minigamesbox.classic.events.spectator.settings.SpectatorSettingsMenu;
 import plugily.projects.minigamesbox.classic.handlers.language.MessageBuilder;
 import plugily.projects.minigamesbox.classic.utils.misc.complement.ComplementAccessor;
+import plugily.projects.minigamesbox.classic.utils.task.MovementTrackerTask;
 import plugily.projects.minigamesbox.classic.utils.version.VersionUtils;
 import plugily.projects.minigamesbox.inventory.normal.NormalFastInv;
 import plugily.projects.minigamesbox.number.NumberUtils;
 
 import java.util.Collections;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author Tigerpanzer_02
@@ -43,11 +47,20 @@ public class SpectatorItemsManager implements Listener {
 
   private final PluginMain plugin;
   private final SpectatorSettingsMenu spectatorSettingsMenu;
+  private final ScheduledExecutorService trackerExecutor;
 
   public SpectatorItemsManager(PluginMain plugin) {
     this.plugin = plugin;
     plugin.getServer().getPluginManager().registerEvents(this, plugin);
     spectatorSettingsMenu = new SpectatorSettingsMenu(plugin);
+    this.trackerExecutor = Executors.newSingleThreadScheduledExecutor(t -> {
+        Thread thread = new Thread(t);
+        thread.setName(plugin.getName() + " - Tracker Thread");
+        thread.setPriority(Thread.MIN_PRIORITY);
+        thread.setDaemon(false);
+        return thread;
+    });
+    this.trackerExecutor.scheduleAtFixedRate(new MovementTrackerTask(this.plugin, this.spectatorSettingsMenu), 0, 50, TimeUnit.MILLISECONDS);
   }
 
   public void openSpectatorMenu(Player player, IPluginArena arena) {
@@ -68,7 +81,7 @@ public class SpectatorItemsManager implements Listener {
         new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_TELEPORT").asKey().arena(arena).player(arenaPlayer).send(event.getWhoClicked());
         HumanEntity humanEntity = event.getWhoClicked();
         humanEntity.closeInventory();
-        VersionUtils.teleport(humanEntity, arenaPlayer.getLocation());
+        humanEntity.teleportAsync(arenaPlayer.getLocation());
       });
     }
     gui.open(player);
@@ -77,4 +90,9 @@ public class SpectatorItemsManager implements Listener {
   public SpectatorSettingsMenu getSpectatorSettingsMenu() {
     return spectatorSettingsMenu;
   }
+
+  public void shutdown() {
+      this.trackerExecutor.shutdown();
+  }
+
 }

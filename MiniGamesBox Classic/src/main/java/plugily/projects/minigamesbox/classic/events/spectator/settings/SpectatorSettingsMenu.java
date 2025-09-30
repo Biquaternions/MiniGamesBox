@@ -43,6 +43,8 @@ import plugily.projects.minigamesbox.classic.utils.version.events.api.PlugilyPla
 import plugily.projects.minigamesbox.inventory.normal.NormalFastInv;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.stream.Collectors;
 
 /**
@@ -56,9 +58,9 @@ public class SpectatorSettingsMenu implements Listener {
   private final NormalFastInv inventory;
   private final FileConfiguration config;
   public List<SpectatorSettingsItem> settingsItems = new ArrayList<>();
-  public List<Player> firstPersonMode = new ArrayList<>();
-  public List<Player> autoTeleport = new ArrayList<>();
-  public Map<Player, Player> targetPlayer = new HashMap<>();
+  public Queue<Player> firstPersonMode = new ConcurrentLinkedQueue<>();
+  public Queue<Player> autoTeleport = new ConcurrentLinkedQueue<>();
+  public Map<Player, Player> targetPlayer = new ConcurrentHashMap<>();
   public List<Player> invisibleSpectators = new ArrayList<>();
 
   public SpectatorSettingsMenu(PluginMain plugin) {
@@ -194,38 +196,6 @@ public class SpectatorSettingsMenu implements Listener {
       });
     }
     return gui;
-  }
-
-  @EventHandler
-  public void onPlayerMovement(PlayerMoveEvent event) {
-    Player player = event.getPlayer();
-    IUser user = plugin.getUserManager().getUser(player);
-    if(user.getArena() != null) {
-      firstPersonMode.forEach(spectator -> {
-        if(spectator.getSpectatorTarget() instanceof Player) {
-          plugin.getActionBarManager().addActionBar(spectator, new ActionBar(new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_FIRST_PERSON_MODE_ACTION_BAR").asKey().arena(user.getArena()).player((Player) spectator.getSpectatorTarget()), ActionBar.ActionBarType.DISPLAY));
-        }
-      });
-    }
-    if(!user.isSpectator()) {
-      return;
-    }
-    if(!targetPlayer.containsKey(player)) {
-      return;
-    }
-    Player target = targetPlayer.get(player);
-    if(player.getLocation().getWorld() != target.getLocation().getWorld()) {
-      //Fix Cannot measure distance between worlds
-      return;
-    }
-    double distance = player.getLocation().distance(target.getLocation());
-    plugin.getActionBarManager().addActionBar(player, new ActionBar(new MessageBuilder("IN_GAME_SPECTATOR_SPECTATOR_MENU_SETTINGS_TARGET_PLAYER_ACTION_BAR").asKey().arena(user.getArena()).integer((int) distance).player(target), ActionBar.ActionBarType.DISPLAY));
-    if(distance <= 15) {
-      return;
-    }
-    if(autoTeleport.contains(player)) {
-      VersionUtils.teleport(player, target.getLocation());
-    }
   }
 
   @EventHandler
