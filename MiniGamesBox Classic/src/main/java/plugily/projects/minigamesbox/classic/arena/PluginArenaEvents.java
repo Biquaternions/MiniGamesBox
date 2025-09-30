@@ -24,6 +24,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityExhaustionEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import plugily.projects.minigamesbox.api.arena.IArenaState;
@@ -115,6 +116,22 @@ public class PluginArenaEvents implements Listener {
       event.setCancelled(true);
       event.setFoodLevel(20);
     }
+  }
+
+  @EventHandler(priority = EventPriority.HIGH)
+  public void onEntityExhaustion(EntityExhaustionEvent event) {
+      if (event.getEntity().getType() != EntityType.PLAYER) {
+          return;
+      }
+      Player player = (Player) event.getEntity();
+      IPluginArena arena = plugin.getArenaRegistry().getArena(player);
+      if (arena == null) {
+          return;
+      }
+      if (!plugin.getConfigPreferences().getOption("SATURATION_LOSE")) {
+          event.setCancelled(true);
+          event.setExhaustion(0.0f);
+      }
   }
 
   public boolean additionalFallDamageRules(Player victim, IPluginArena arena, EntityDamageEvent event) {

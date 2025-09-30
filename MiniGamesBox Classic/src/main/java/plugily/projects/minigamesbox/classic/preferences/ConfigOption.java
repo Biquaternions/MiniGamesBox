@@ -69,6 +69,7 @@ public class ConfigOption implements IConfigOption {
     options.put("DROWNING_DAMAGE", new ConfigOption("Damage.Drowning", false, true));
     options.put("FIRE_DAMAGE", new ConfigOption("Damage.Fire", false, true));
     options.put("HUNGER_LOSE", new ConfigOption("Damage.Hunger", false, true));
+    options.put("SATURATION_LOSE", new ConfigOption("Damage.Saturation", false, true));
 
     options.put("WEATHER_CYCLE", new ConfigOption("Cycle.Weather", false, true));
     options.put("DAYLIGHT_CYCLE", new ConfigOption("Cycle.Daylight.Enable", false, true));
